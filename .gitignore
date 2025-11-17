@@ -1,0 +1,16 @@
+# Environnement virtuel
+.simo/
+
+# Fichiers Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Données / résultats lourds
+data/
+results/*.pt
+results/*.pth
