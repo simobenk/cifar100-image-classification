@@ -8,6 +8,8 @@ from src.models.cnn_baseline import BaselineCNN
 from src.models.cnn_enhanced import EnhancedCNN 
 from src.models.resnet_transfer import create_resnet18_model
 
+import argparse
+
 
 
 def get_device():
@@ -70,17 +72,38 @@ def evaluate(model, dataloader, criterion, device):
 
     return avg_loss, accuracy
 
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--epochs", type=int, default=2,
+                        help="Nombre d'epochs d'entraînement")
+
+    parser.add_argument("--batch-size", type=int, default=64,
+                        help="Taille de batch pour les DataLoaders")
+
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="finetune_last_block",
+        choices=["feature_extract", "finetune_last_block", "finetune_last_two_blocks"],
+        help="Mode de fine-tuning du ResNet18",
+    )
+
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
     device = get_device()
 
     # train_loader, test_loader = get_cifar100_dataloaders(batch_size=64, num_workers=2)
-    train_loader, test_loader = get_cifar100_dataloaders_resnet(batch_size=64, num_workers=2)
-
+    train_loader, test_loader = get_cifar100_dataloaders_resnet(batch_size=args.batch_size, num_workers=2)
     # model = BaselineCNN(num_classes=100).to(device)
     # model = EnhancedCNN(num_classes=100).to(device) 
     model = create_resnet18_model(
         num_classes=100, 
-        mode="finetune_last_block",
+        mode=args.mode,
         ).to(device)
     
     criterion = nn.CrossEntropyLoss()
@@ -107,7 +130,7 @@ def main():
     )
 
 
-    num_epochs = 2
+    num_epochs = args.epochs
 
     for epoch in range(num_epochs):
         avg_train_loss = train_one_epoch(
