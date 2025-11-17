@@ -78,12 +78,33 @@ def main():
 
     # model = BaselineCNN(num_classes=100).to(device)
     # model = EnhancedCNN(num_classes=100).to(device) 
-    model = create_resnet18_model(num_classes=100, feature_extract=True).to(device)
+    model = create_resnet18_model(
+        num_classes=100, 
+        mode="finetune_last_block",
+        ).to(device)
     
     criterion = nn.CrossEntropyLoss()
     # optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    params_to_update = [p for p in model.parameters() if p.requires_grad]
-    optimizer = optim.Adam(params_to_update, lr=1e-3)
+    backbone_params = []
+    head_params = []
+
+    for name, param in model.named_parameters():
+        if not param.requires_grad:
+            continue  
+
+        if name.startswith("fc."):
+            head_params.append(param)
+        else:
+            backbone_params.append(param)
+
+    print(f"Params backbone: {len(backbone_params)}, head: {len(head_params)}")
+
+    optimizer = optim.Adam(
+        [
+            {"params": backbone_params, "lr": 1e-4},  
+            {"params": head_params, "lr": 1e-3},      
+        ]
+    )
 
 
     num_epochs = 2
